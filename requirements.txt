@@ -1,0 +1,7 @@
+av
+aiohttp
+aiortc
+opencv-python
+numpy
+pvrecorder
+pyaudio
