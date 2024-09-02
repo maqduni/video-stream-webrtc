@@ -1,0 +1,36 @@
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>WebRTC demo</title>
+
+    <link href="client.css" rel="stylesheet">
+</head>
+<body>
+<div class="option" hidden="hidden">
+    <input id="use-video" checked="checked" type="checkbox"/>
+    <label for="use-video">Use video</label>
+    <select id="video-transform">
+        <option value="none" selected>No transform</option>
+        <option value="edges">Edge detection</option>
+        <option value="cartoon">Cartoon effect</option>
+        <option value="rotate">Rotate</option>
+    </select>
+</div>
+<div class="option" hidden="hidden">
+    <input id="use-stun" type="checkbox"/>
+    <label for="use-stun">Use STUN server</label>
+</div>
+
+<button id="startStopButton">Start</button>
+
+<div id="media" style="display: block"></div>
+
+<audio id="audio" controls autoplay></audio>
+<div id="waveform" style="display: block">
+    <!--    <div id="mic" style="border: 1px solid #ddd; border-radius: 4px; margin-top: 1rem"></div>-->
+</div>
+
+<script src="client.js"></script>
+</body>
+</html>

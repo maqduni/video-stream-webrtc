@@ -10,7 +10,7 @@ OPEN_FACE_FRAME_FILE = "frame.jpg"
 OPEN_FACE_PROCESSED_FRAME_FILE = "frame_processed.jpg"
 
 TEMP_DIR = tempfile.mkdtemp()
-
+print('TEMP_DIR', TEMP_DIR)
 
 async def process_frame_with_openface(frame):
     # Ensure the frame is continuous
@@ -18,7 +18,6 @@ async def process_frame_with_openface(frame):
         frame = np.ascontiguousarray(frame)
 
     frame_path = os.path.join(TEMP_DIR, OPEN_FACE_FRAME_FILE)
-    # processed_frame_path = os.path.join(temp_dir, PROCESSED_FRAME_FILE)
     cv2.imwrite(frame_path, frame)
 
     # Command to run OpenFace on the frame

@@ -72,13 +72,12 @@ class AudioCapture(MediaStreamTrack):
 
 
 async def index(request):
-    content = open(os.path.join(ROOT, "index.html"), "r").read()
+    content = open(os.path.join(ROOT, "public/index.html"), "r").read()
     return web.Response(content_type="text/html", text=content)
 
-
-async def javascript(request):
-    content = open(os.path.join(ROOT, "client.js"), "r").read()
-    return web.Response(content_type="application/javascript", text=content)
+# async def javascript(request):
+#     content = open(os.path.join(ROOT, "public/client.js"), "r").read()
+#     return web.Response(content_type="application/javascript", text=content)
 
 
 async def offer(request):
@@ -98,7 +97,7 @@ async def offer(request):
     unprocessed_video_capture_track = OpenCVCapture(processed=False)
     pc.addTrack(unprocessed_video_capture_track)
 
-    processed_video_capture_track = OpenCVCapture(processed=False)
+    processed_video_capture_track = OpenCVCapture(processed=True)
     pc.addTrack(processed_video_capture_track)
 
     audio_capture_track = AudioCapture()
@@ -144,7 +143,11 @@ async def close_peer_connections(app):
 if __name__ == "__main__":
     app = web.Application()
     app.on_shutdown.append(close_peer_connections)
+
+    # Routes
     app.router.add_get("/", index)
-    app.router.add_get("/client.js", javascript)
+    # app.router.add_get("/public/client.js", javascript)
     app.router.add_post("/offer", offer)
+    app.router.add_static('/', path=os.path.join(ROOT, "public"), name='public')
+
     web.run_app(app, access_log=None, host="0.0.0.0", port=8080, ssl_context=None)

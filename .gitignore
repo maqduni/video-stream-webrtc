@@ -131,3 +131,16 @@ dmypy.json
 # IDEs
 .idea
 .vscode
+
+# Laravel and Lumen specific
+public/js
+public/css
+public/fonts
+mix-manifest.json
+public/*.js
+public/*.html
+public/*.css
+
+# Node
+node_modules/
+npm-debug.log
