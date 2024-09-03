@@ -1,14 +1,10 @@
 import asyncio
-import fractions
 import logging
 import os
 import uuid
 
-import numpy as np
-import pyaudio
 from aiohttp import web
-from aiortc import RTCPeerConnection, RTCSessionDescription, MediaStreamTrack, RTCIceCandidate
-from av import AudioFrame
+from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate
 
 from server.helpers.parse_candidate import parse_candidate
 from server.tracks.open_cv_process_track import OpenCVProcessTrack
@@ -85,24 +81,24 @@ async def offer(request):
     return web.json_response({'sdp': pc.localDescription.sdp, 'type': pc.localDescription.type})
 
 
-async def ice_candidate(request):
-    params = await request.json()
-    candidate_param = parse_candidate(params['candidate'])
-
-    candidate = RTCIceCandidate(sdpMid=params['sdpMid'],
-                                sdpMLineIndex=params['sdpMLineIndex'],
-                                component=candidate_param['component'],
-                                foundation=candidate_param['foundation'],
-                                ip=candidate_param['ip'],
-                                port=candidate_param['port'],
-                                priority=candidate_param['priority'],
-                                protocol=candidate_param['protocol'],
-                                tcpType=candidate_param['tcpType'],
-                                type=candidate_param['type'],
-                                )
-    for pc in pcs:
-        await pc.addIceCandidate(candidate)
-    return web.Response()
+# async def ice_candidate(request):
+#     params = await request.json()
+#     candidate_param = parse_candidate(params['candidate'])
+#
+#     candidate = RTCIceCandidate(sdpMid=params['sdpMid'],
+#                                 sdpMLineIndex=params['sdpMLineIndex'],
+#                                 component=candidate_param['component'],
+#                                 foundation=candidate_param['foundation'],
+#                                 ip=candidate_param['ip'],
+#                                 port=candidate_param['port'],
+#                                 priority=candidate_param['priority'],
+#                                 protocol=candidate_param['protocol'],
+#                                 tcpType=candidate_param['tcpType'],
+#                                 type=candidate_param['type'],
+#                                 )
+#     for pc in pcs:
+#         await pc.addIceCandidate(candidate)
+#     return web.Response()
 
 
 async def close_peer_connections(app):
@@ -118,7 +114,6 @@ if __name__ == "__main__":
 
     # Routes
     app.router.add_get("/", index)
-    # app.router.add_get("/public/client.js", javascript)
     app.router.add_post("/offer", offer)
     # app.router.add_post('/ice-candidate', ice_candidate)
 

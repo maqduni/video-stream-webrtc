@@ -161,8 +161,6 @@ onDocumentReady(() => {
              * type RTCRtpTransceiverDirection = "inactive" | "recvonly" | "sendonly" | "sendrecv" | "stopped";
              */
             // pc.addTransceiver('video', {direction: 'recvonly'});
-            // pc.addTransceiver('video', {direction: 'recvonly'});
-            // pc.addTransceiver('video', {direction: 'recvonly'});
             // pc.addTransceiver('video', {direction: 'sendrecv'});
 
             try {
@@ -211,12 +209,8 @@ onDocumentReady(() => {
             isRecording = !isRecording;
             if (isRecording) {
                 $startStopButton.innerText = "Stop";
-                // $startStopButton.classList.remove('start-button');
-                // $startStopButton.classList.add('stop-button');
             } else {
                 $startStopButton.innerText = "Start";
-                // $startStopButton.classList.remove('stop-button');
-                // $startStopButton.classList.add('start-button');
             }
         },
 
