@@ -2,13 +2,6 @@ import WaveSurfer from 'wavesurfer.js'
 import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js'
 import onDocumentReady from "./helpers/onDocumentReady";
 
-
-/*
- * todo:
- *  - process the video with OpenFace
- *      - option 1: collect individual frame data, append it to a data frame and render
- *      - option 2: process video segments and render each segment's data
- */
 onDocumentReady(() => {
     let pc = null;
     let wavesurfer = null;
@@ -141,6 +134,7 @@ onDocumentReady(() => {
 
                         const blob = new Blob([event.data])
                         $graphs.src = URL.createObjectURL(blob);
+                        $graphs.style.display = 'block';
                     };
                     dataChannel.onclose = () => {
                         console.log("Data channel is closed");
