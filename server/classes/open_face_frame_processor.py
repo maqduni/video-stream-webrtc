@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import re
+from io import BytesIO
 
 from aiortc import RTCPeerConnection, RTCDataChannel
 
@@ -22,9 +23,19 @@ OPEN_FACE_EXTRACTED_FEATURES_FILE = 'frame_processed.csv'
 TEMP_DIR = tempfile.mkdtemp()
 print('TEMP_DIR', TEMP_DIR)
 
+DF_COLUMNS = ['AU01_r', 'AU02_r', 'AU04_r', 'AU05_r', 'AU06_r', 'AU07_r', 'AU09_r',
+              'AU10_r', 'AU12_r', 'AU14_r', 'AU15_r', 'AU17_r', 'AU20_r', 'AU23_r',
+              'AU25_r', 'AU26_r', 'AU45_r']
+
+DF_COLUMN_LABELS = ['Inner brow raiser', 'Outer brow raiser', 'Brow lowerer', 'Upper lid raiser', 'Cheek raiser',
+                    'Lid tightener', 'Nose wrinkler', 'Upper lip raiser',
+                    'Lip corner puller', 'Dimpler', 'Lip corner depressor', 'Chin raiser', 'Lip stretcher',
+                    'Lip tightener', 'Lips part', 'Jaw drop', 'Blink', ]
+
 
 class OpenFaceFrameProcessor:
     data_channel = None
+    df = None
 
     def __init__(self, pc: RTCPeerConnection):
         # super().__init__()
@@ -97,45 +108,55 @@ class OpenFaceFrameProcessor:
         df_clean = df[df.confidence >= .80]
 
         # Plot all Action Unit time series.
-        au_regex_pat = re.compile(r'^AU[0-9]+_r$')
-        au_columns = df.columns[df.columns.str.contains(au_regex_pat)]
-        print("List of AU columns:", au_columns)
+        # au_regex_pat = re.compile(r'^AU[0-9]+_r$')
+        # au_columns = df.columns[df.columns.str.contains(au_regex_pat)]
+        # print("List of AU columns:", au_columns)
 
-        if self.data_channel is not None:
-            # serializable_data = au_columns.tolist()
-            serializable_data = df_clean.to_dict()
+        self.add_row_to_df(df_clean)
 
-            json_string = json.dumps(serializable_data)
-            self.data_channel.send(json_string)
+        self.send_graphs_to_client()
 
-        # f, axes = plt.subplots(6, 3, figsize=(10, 12), sharex=True, sharey=True)
-        # axes = axes.flatten()
-        # for au_ix, au_col in enumerate(au_columns):
-        #     sns.lineplot(x='frame', y=au_col, hue='face', data=df_clean, ax=axes[au_ix])
-        #     axes[au_ix].set(title=au_col, ylabel='Intensity')
-        #     axes[au_ix].legend(loc=5)
-        # plt.suptitle("AU intensity predictions by time for each face", y=1.02)
-        # plt.tight_layout()
+    def send_graphs_to_client(self):
+        if self.data_channel is None:
+            return
 
-        # Let's compare how much AU12 (smiling) activity occurs at similar times across people.
-        # df_clean.pivot(index='frame', columns='face', values='AU12_r').corr()
+        f, axes = plt.subplots(6, 3, figsize=(10, 12), sharex=True, sharey=True)
+        axes = axes.flatten()
+        for au_ix, au_col in enumerate(DF_COLUMNS):
+            sns.lineplot(x='frame', y=au_col, hue='face', data=self.df, ax=axes[au_ix])
+            axes[au_ix].set(title=DF_COLUMN_LABELS[au_ix], ylabel='Intensity')
+            axes[au_ix].legend(loc=5)
+        plt.suptitle("AU intensity predictions by time for each face", y=1.02)
+        plt.tight_layout()
 
-    # def create_data_channel(self):
-    #     # Create a data channel
-    #     data_channel = self.pc.createDataChannel("graphs", negotiated=True, id=0)
-    #
-    #     # Set up event listeners for the data channel
-    #     @data_channel.on("open")
-    #     def on_data_channel_open():
-    #         print("Data channel is open")
-    #         # data_channel.send("Hello, World!")
-    #
-    #     @data_channel.on("message")
-    #     def on_data_channel_message(message):
-    #         print(f"Received message: {message}")
-    #
-    #     @data_channel.on("close")
-    #     def on_datachannel_close():
-    #         print("Data channel is closed")
-    #
-    #     self.data_channel = data_channel
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+
+        self.data_channel.send(buffer.read())
+
+        # Send the DataFrame to the client
+        # self.data_channel.send(json.dumps(self.df.to_dict(orient='records')))
+
+        # # Let's compare how much AU12 (smiling) activity occurs at similar times across people.
+        # df_clean.pivot(index='index', columns='face', values='AU12_r').corr()
+
+    def add_row_to_df(self, row):
+        # Create a new DataFrame with 30 rows
+        if self.df is None:
+            self.df = pd.DataFrame(0, index=range(30), columns=DF_COLUMNS + ['face', 'frame'])
+
+        # Append df_clean to dummy_df
+        combined_df = pd.concat([self.df, row], ignore_index=True)
+
+        # Ensure the combined DataFrame only contains 30 rows
+        if len(combined_df) > 30:
+            combined_df = combined_df.iloc[-30:]
+
+        # Reset the index
+        combined_df = combined_df.reset_index(drop=True)
+
+        # Copy index values to frame
+        combined_df['frame'] = combined_df.index
+
+        self.df = combined_df

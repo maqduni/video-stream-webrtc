@@ -18,13 +18,11 @@ onDocumentReady(() => {
 
     const $videoTransform = document.getElementById('video-transform'),
         $useStun = document.getElementById('use-stun'),
-        $audio = document.getElementById('audio'),
         $sourceVideo = document.getElementById('source-video'),
         $processedVideo = document.getElementById('processed-video'),
-        $mediaContainer = document.getElementById("media"),
         $startStopButton = document.getElementById('start-stop-button'),
         $sourceAudio = document.getElementById('source-audio'),
-        $waveForm = document.getElementById('waveform');
+        $graphs = document.getElementById('graphs');
 
     window.app = {
         createMultipleDataChannels() {
@@ -140,6 +138,9 @@ onDocumentReady(() => {
                     };
                     dataChannel.onmessage = (event) => {
                         console.log(`Received message: ${event.data}`);
+
+                        const blob = new Blob([event.data])
+                        $graphs.src = URL.createObjectURL(blob);
                     };
                     dataChannel.onclose = () => {
                         console.log("Data channel is closed");
