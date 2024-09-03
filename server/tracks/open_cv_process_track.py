@@ -2,11 +2,11 @@ import fractions
 import time
 
 import cv2
-import numpy as np
-from aiortc import MediaStreamTrack
+from aiortc import MediaStreamTrack, RTCPeerConnection, RTCDataChannel
 
+from server.classes.open_face_frame_processor import OpenFaceFrameProcessor
+from server.helpers.get_log_info import get_log_info
 from server.helpers.ndarray_to_video_frame import ndarray_to_video_frame
-from server.helpers.process_frame_with_openface import process_frame_with_openface
 from server.helpers.video_frame_to_ndarray import video_frame_to_ndarray
 
 SAMPLING_RATE = 15
@@ -22,9 +22,11 @@ class OpenCVProcessTrack(MediaStreamTrack):
     sampled_frame = None
     sampling_step = 0
 
-    def __init__(self, track):
+    def __init__(self, track: MediaStreamTrack, pc: RTCPeerConnection):
         super().__init__()
         self.track = track
+        self.pc = pc
+        self.frame_processor = OpenFaceFrameProcessor(pc)
 
     async def recv(self):
         frame = await self.track.recv()
@@ -34,7 +36,8 @@ class OpenCVProcessTrack(MediaStreamTrack):
             return self.sampled_frame
 
         # Process the frame (e.g., apply transformations)
-        frame = await process_frame_with_openface(frame)
+        frame = await self.frame_processor.process_frame(frame)
+        await self.frame_processor.collect_extracted_features()
 
         frame = cv2.flip(frame, 1)
 

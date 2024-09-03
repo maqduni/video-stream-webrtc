@@ -87,6 +87,10 @@ onDocumentReady(() => {
                 // }
             });
 
+            // pc.addEventListener('datachannel', event => {
+            //     console.log('datachannel event', event);
+            // });
+
             // pc.addEventListener('icecandidateerror', event => {
             //     console.log('icecandidateerror', event);
             // })
@@ -112,7 +116,7 @@ onDocumentReady(() => {
                         video: true,
                         audio: true
                     });
-                    console.log(stream);
+                    // console.log(stream);
 
                     /*
                      * Video
@@ -126,6 +130,20 @@ onDocumentReady(() => {
                      */
                     $sourceAudio.srcObject = stream;
                     $sourceAudio.muted = true;
+
+                    /*
+                     * Data channel
+                     */
+                    const dataChannel = pc.createDataChannel("graphs");
+                    dataChannel.onopen = () => {
+                        console.log("Data channel is open");
+                    };
+                    dataChannel.onmessage = (event) => {
+                        console.log(`Received message: ${event.data}`);
+                    };
+                    dataChannel.onclose = () => {
+                        console.log("Data channel is closed");
+                    };
                 } catch (err) {
                     console.error('Error accessing media devices.', err);
                 }

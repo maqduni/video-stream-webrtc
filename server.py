@@ -1,16 +1,12 @@
 import asyncio
-import logging
 import os
 import uuid
 
 from aiohttp import web
-from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate
+from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RTCDataChannel
 
-from server.helpers.parse_candidate import parse_candidate
+from server.helpers.get_log_info import get_log_info
 from server.tracks.open_cv_process_track import OpenCVProcessTrack
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 pcs = set()
 
@@ -30,10 +26,26 @@ async def offer(request):
     pc_id = "PeerConnection(%s)" % uuid.uuid4()
     pcs.add(pc)
 
-    def log_info(msg, *args):
-        logger.info(pc_id + " " + msg, *args)
+    log_info = get_log_info(pc_id)
 
     log_info("Created for %s", request.remote)
+
+    # Create a data channel
+    # data_channel = pc.createDataChannel("graphs", negotiated=True, id=0)
+
+    # Set up event listeners for the data channel
+    # @data_channel.on("open")
+    # def on_data_channel_open():
+    #     print("Data channel is open")
+    #     # data_channel.send("Hello, World!")
+    #
+    # @data_channel.on("message")
+    # def on_data_channel_message(message):
+    #     print(f"Received message: {message}")
+    #
+    # @data_channel.on("close")
+    # def on_datachannel_close():
+    #     print("Data channel is closed")
 
     # player = MediaPlayer(os.path.join(ROOT, "sample.ts"))
 
@@ -64,7 +76,7 @@ async def offer(request):
         log_info("Track %s received", track.kind)
 
         if track.kind == "video":
-            local_video = OpenCVProcessTrack(track)
+            local_video = OpenCVProcessTrack(track, pc)
             pc.addTrack(local_video)
 
         @track.on("ended")
