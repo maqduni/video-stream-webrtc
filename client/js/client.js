@@ -1,15 +1,10 @@
-// import WaveSurfer from 'wavesurfer.min.js';
-import createVideoElement from './helpers/createVideoElement.js';
-import removeVideoElements from './helpers/removeVideoElements.js';
+import WaveSurfer from 'wavesurfer.js'
+import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js'
 import onDocumentReady from "./helpers/onDocumentReady";
 
 
 /*
  * todo:
- *  - use browser video capture as input
- *  - use browser audio capture as input
- *  - use browser audio capture as input and visualize it
- *  - refactor the backend
  *  - process the video with OpenFace
  *      - option 1: collect individual frame data, append it to a data frame and render
  *      - option 2: process video segments and render each segment's data
@@ -17,75 +12,22 @@ import onDocumentReady from "./helpers/onDocumentReady";
 onDocumentReady(() => {
     let pc = null;
     let wavesurfer = null;
+    let record = null;
     let isRecording = false;
+    let stream = null;
 
     const $videoTransform = document.getElementById('video-transform'),
         $useStun = document.getElementById('use-stun'),
-        $start = document.getElementById('start'),
-        $stop = document.getElementById('stop'),
         $audio = document.getElementById('audio'),
+        $sourceVideo = document.getElementById('source-video'),
+        $processedVideo = document.getElementById('processed-video'),
         $mediaContainer = document.getElementById("media"),
-        $startStopButton = document.getElementById('startStopButton');
+        $startStopButton = document.getElementById('start-stop-button'),
+        $sourceAudio = document.getElementById('source-audio'),
+        $waveForm = document.getElementById('waveform');
 
     window.app = {
-        start() {
-            const config = {
-                sdpSemantics: 'unified-plan'
-            };
-
-            if ($useStun.checked) {
-                config.iceServers = [{urls: ['stun:stun.l.google.com:19302']}];
-            }
-
-            pc = new RTCPeerConnection(config);
-
-            // connect audio / video
-            pc.addEventListener('track', function (evt) {
-                console.log('track event', evt);
-
-                if (evt.track.kind === 'video') {
-                    createVideoElement(evt.track.id, new MediaStream([evt.track]), $mediaContainer);
-                }
-
-                if (evt.track.kind === 'audio') {
-                    // createVideoElement(evt.track.id, new MediaStream([evt.track]));
-                    $audio.srcObject = new MediaStream([evt.track]);
-
-                    // Ensure the audio element has a valid src before loading it into WFPlayer
-                    $audio.onloadedmetadata = () => {
-                        // if (!audio.srcObject) {
-                        //     console.error('Audio element does not have a valid srcObject');
-                        //     return;
-                        // }
-                        //
-                        // // if (!audio.src) {
-                        // //     audio.src = URL.createObjectURL(audio.srcObject);
-                        // // }
-                        //
-                        // const wf = new WFPlayer({
-                        //     container: document.getElementById('waveform'),
-                        //     mediaElement: audio,
-                        // });
-                        //
-                        // wf.load(audio);
-
-                        // createWaveSurfer(audio.srcObject);
-                    };
-                    // const wf = new WFPlayer({
-                    //     container: document.getElementById('waveform'),
-                    //     mediaElement: document.getElementById('audio'),
-                    // });
-                    //
-                    // wf.load(document.getElementById('audio'));
-                }
-
-                // if (evt.track.label === 'processed_capture') {
-                //     document.getElementById('processed_capture').srcObject = evt.streams[0];
-                // } else {
-                //     document.getElementById('unprocessed_capture').srcObject = evt.streams[0];
-                // }
-            });
-
+        createMultipleDataChannels() {
             // // Create multiple data channels
             // let dataChannel1 = pc.createDataChannel("channel1");
             // let dataChannel2 = pc.createDataChannel("channel2");
@@ -111,28 +53,117 @@ onDocumentReady(() => {
             // dataChannel2.onmessage = (event) => {
             //     console.log("Data Channel 2 Message:", event.data);
             // };
-
-            this.negotiate();
-
-            // document.getElementById('start').style.display = 'none';
-            // document.getElementById('stop').style.display = 'inline-block';
         },
 
-        stop() {
-            // document.getElementById('stop').style.display = 'none';
-            // document.getElementById('start').style.display = 'inline-block';
+        async startPC() {
+            const pcConfig = {
+                sdpSemantics: 'unified-plan',
+                // iceServers: [{urls: ['stun:stun.l.google.com:19302']}],
+            };
 
+            // if ($useStun.checked) {
+            //     pcConfig.iceServers = [{urls: ['stun:stun.l.google.com:19302']}];
+            // }
+
+            pc = new RTCPeerConnection(pcConfig);
+
+            // Receive audio / video tracks
+            pc.addEventListener('track', function (event) {
+                console.log('track event', event);
+
+                if (event.track.kind === 'video') {
+                    // createVideoElement(event.track.id, new MediaStream([event.track]), $mediaContainer);
+                    $processedVideo.srcObject = new MediaStream([event.track]);
+                }
+
+                // if (event.track.kind === 'audio') {
+                //     // createVideoElement(event.track.id, new MediaStream([event.track]));
+                //     $audio.srcObject = new MediaStream([event.track]);
+                //
+                //     // Ensure the audio element has a valid src before loading it into WFPlayer
+                //     $audio.onloadedmetadata = () => {
+                //
+                //     };
+                // }
+            });
+
+            // pc.addEventListener('icecandidateerror', event => {
+            //     console.log('icecandidateerror', event);
+            // })
+            //
+            // pc.addEventListener('icecandidate', event => {
+            //     console.log('icecandidate event', event);
+            //
+            //     pc.addIceCandidate(event.candidate);
+            //
+            //     if (event.candidate) {
+            //         // Send the ICE candidate to the backend
+            //         fetch('/ice-candidate', {
+            //             method: 'POST',
+            //             headers: {'Content-Type': 'application/json'},
+            //             body: JSON.stringify(event.candidate)
+            //         });
+            //     }
+            // });
+
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: true
+                    });
+                    console.log(stream);
+
+                    /*
+                     * Video
+                     */
+                    $sourceVideo.srcObject = stream;
+                    $sourceVideo.muted = true;
+                    stream.getVideoTracks().forEach(track => pc.addTrack(track, stream));
+
+                    /*
+                     * Audio
+                     */
+                    $sourceAudio.srcObject = stream;
+                    $sourceAudio.muted = true;
+                } catch (err) {
+                    console.error('Error accessing media devices.', err);
+                }
+            } else {
+                console.error('getUserMedia is not supported in this browser.');
+            }
+
+            this.negotiatePC();
+        },
+
+        stopPC() {
             // close peer connection
             setTimeout(function () {
-                pc.close();
-                removeVideoElements($mediaContainer);
+                if (pc) {
+                    pc.close();
+                    // removeVideoElements($mediaContainer);
+                    $processedVideo.srcObject = null;
+                }
+
+                if (stream) {
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+
+                    $sourceVideo.srcObject = null;
+                }
+
+                app.stopWaveSurfer();
             }, 500);
         },
 
-        async negotiate() {
-            pc.addTransceiver('video', {direction: 'recvonly'});
-            pc.addTransceiver('video', {direction: 'recvonly'});
-            pc.addTransceiver('audio', {direction: 'recvonly'});
+        async negotiatePC() {
+            /*
+             * type RTCRtpTransceiverDirection = "inactive" | "recvonly" | "sendonly" | "sendrecv" | "stopped";
+             */
+            // pc.addTransceiver('video', {direction: 'recvonly'});
+            // pc.addTransceiver('video', {direction: 'recvonly'});
+            // pc.addTransceiver('video', {direction: 'recvonly'});
+            // pc.addTransceiver('video', {direction: 'sendrecv'});
 
             try {
                 const offer = await pc.createOffer();
@@ -174,44 +205,6 @@ onDocumentReady(() => {
             } catch (error) {
                 console.error(error);
             }
-            // return pc.createOffer().then(function (offer) {
-            //     return pc.setLocalDescription(offer);
-            // }).then(function () {
-            //     // wait for ICE gathering to complete
-            //     return new Promise(function (resolve) {
-            //         if (pc.iceGatheringState === 'complete') {
-            //             resolve();
-            //         } else {
-            //             function checkState() {
-            //                 if (pc.iceGatheringState === 'complete') {
-            //                     pc.removeEventListener('icegatheringstatechange', checkState);
-            //                     resolve();
-            //                 }
-            //             }
-            //
-            //             pc.addEventListener('icegatheringstatechange', checkState);
-            //         }
-            //     });
-            // }).then(function () {
-            //     const offer = pc.localDescription;
-            //     return fetch('/offer', {
-            //         body: JSON.stringify({
-            //             sdp: offer.sdp,
-            //             type: offer.type,
-            //             video_transform: document.getElementById('video-transform').value
-            //         }),
-            //         headers: {
-            //             'Content-Type': 'application/json'
-            //         },
-            //         method: 'POST'
-            //     });
-            // }).then(function (response) {
-            //     return response.json();
-            // }).then(function (answer) {
-            //     return pc.setRemoteDescription(answer);
-            // }).catch(function (e) {
-            //     alert(e);
-            // });
         },
 
         toggleStartStopButtonState() {
@@ -225,126 +218,54 @@ onDocumentReady(() => {
                 // $startStopButton.classList.remove('stop-button');
                 // $startStopButton.classList.add('start-button');
             }
-        }
+        },
+
+        async startWaveSurfer() {
+            // Create an instance of WaveSurfer
+            if (wavesurfer) {
+                wavesurfer.destroy()
+            }
+            wavesurfer = WaveSurfer.create({
+                container: '#waveform',
+                waveColor: 'rgb(200, 0, 200)',
+                progressColor: 'rgb(100, 0, 100)',
+            })
+
+            // console.log('RecordPlugin.getAvailableAudioDevices()', RecordPlugin.getAvailableAudioDevices());
+
+            const deviceId = (await RecordPlugin.getAvailableAudioDevices())[0].deviceId;
+
+            // Initialize the Record plugin
+            record = wavesurfer.registerPlugin(RecordPlugin.create({
+                scrollingWaveform: true,
+                renderRecordedAudio: false
+            }))
+            record.startRecording({deviceId}).then(() => {
+            })
+
+            // Render recorded audio
+            record.on('record-end', (blob) => {
+            });
+            record.on('record-progress', (time) => {
+            })
+        },
+        stopWaveSurfer() {
+            if (record.isRecording() || record.isPaused()) {
+                record.stopRecording();
+            }
+        },
     };
 
     $startStopButton.addEventListener('click', () => {
         if (isRecording) {
-            app.stop();
+            app.stopPC();
         } else {
-            app.start();
+            app.startPC();
         }
         app.toggleStartStopButtonState();
     });
 
-// var wavesurfer;
-// var micContext;
-// var mediaStreamSource;
-// var levelChecker;
-//
-// const createWaveSurfer = async (audioStream) => {
-//     // Create an instance of WaveSurfer
-//     if (wavesurfer) {
-//         wavesurfer.destroy()
-//     }
-//     wavesurfer = WaveSurfer.create({
-//         container: '#mic',
-//         waveColor: 'rgb(200, 0, 200)',
-//         progressColor: 'rgb(100, 0, 100)',
-//     })
-//
-//     try {
-//         micContext = wavesurfer.backend.getAudioContext();
-//         mediaStreamSource = micContext.createMediaStreamSource(stream);
-//         levelChecker = micContext.createScriptProcessor(4096, 1, 1);
-//
-//         mediaStreamSource.connect(levelChecker);
-//         levelChecker.connect(micContext.destination);
-//
-//         levelChecker.onaudioprocess = function (event) {
-//             wavesurfer.empty();
-//             wavesurfer.loadDecodedBuffer(event.inputBuffer);
-//         };
-//     } catch (error) {
-//         console.error('Error decoding audio data:', error);
-//     }
-//
-//     // // Initialize the Record plugin
-//     // record = wavesurfer.registerPlugin(RecordPlugin.create({scrollingWaveform, renderRecordedAudio: false}))
-//     // // Render recorded audio
-//     // record.on('record-end', (blob) => {
-//     //     const container = document.querySelector('#recordings')
-//     //     const recordedUrl = URL.createObjectURL(blob)
-//     //
-//     //     // Create wavesurfer from the recorded audio
-//     //     const wavesurfer = WaveSurfer.create({
-//     //         container,
-//     //         waveColor: 'rgb(200, 100, 0)',
-//     //         progressColor: 'rgb(100, 50, 0)',
-//     //         url: recordedUrl,
-//     //     })
-//     //
-//     //     // Play button
-//     //     const button = container.appendChild(document.createElement('button'))
-//     //     button.textContent = 'Play'
-//     //     button.onclick = () => wavesurfer.playPause()
-//     //     wavesurfer.on('pause', () => (button.textContent = 'Play'))
-//     //     wavesurfer.on('play', () => (button.textContent = 'Pause'))
-//     //
-//     //     // Download link
-//     //     const link = container.appendChild(document.createElement('a'))
-//     //     Object.assign(link, {
-//     //         href: recordedUrl,
-//     //         download: 'recording.' + blob.type.split(';')[0].split('/')[1] || 'webm',
-//     //         textContent: 'Download recording',
-//     //     })
-//     // })
-//     // pauseButton.style.display = 'none'
-//     // recButton.textContent = 'Record'
-//
-//     // record.on('record-progress', (time) => {
-//     //     updateProgress(time)
-//     // })
-// }
-
-    function createWaveSurfer(stream) {
-        if (wavesurfer) {
-            wavesurfer.destroy();
-        }
-
-        wavesurfer = WaveSurfer.create({
-            container: '#waveform',
-            waveColor: 'violet',
-            progressColor: 'purple',
-            backend: 'WebAudio'
-        });
-
-        console.log('wavesurfer', wavesurfer);
-
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const mediaStreamSource = audioContext.createMediaStreamSource(stream);
-        const analyser = audioContext.createAnalyser();
-
-        mediaStreamSource.connect(analyser);
-
-        const processAudio = () => {
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            analyser.getByteTimeDomainData(dataArray);
-
-            // Convert Uint8Array to Float32Array
-            const float32Array = new Float32Array(bufferLength);
-            for (let i = 0; i < bufferLength; i++) {
-                float32Array[i] = (dataArray[i] - 128) / 128.0; // Convert to range [-1, 1]
-            }
-
-            const audioBuffer = audioContext.createBuffer(1, bufferLength, audioContext.sampleRate);
-            audioBuffer.copyToChannel(float32Array, 0);
-
-            wavesurfer.loadDecodedBuffer(audioBuffer);
-            requestAnimationFrame(processAudio);
-        };
-
-        processAudio();
-    }
+    $sourceAudio.onloadedmetadata = () => {
+        app.startWaveSurfer();
+    };
 });

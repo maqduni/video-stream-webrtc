@@ -1,7 +1,7 @@
 from av import VideoFrame
 
 
-def image_to_video_frame(img, pts, time_base):
+def ndarray_to_video_frame(img, pts, time_base):
     # rebuild a VideoFrame, preserving timing information
     new_frame = VideoFrame.from_ndarray(img, format="bgr24")
 

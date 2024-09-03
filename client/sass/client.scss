@@ -13,7 +13,7 @@
           transition: background-color 0.3s;
         }*/
 
-#startStopButton button {
+#start-stop-button button {
   width: 35px;
   height: 35px;
   font-size: 0;
@@ -67,4 +67,12 @@ pre {
 
 #media > video {
   width: 500px;
+}
+
+#source-video {
+  transform: scale(-1, 1);
+
+  &::-webkit-media-controls-panel {
+    transform: scale(-1, 1);
+  }
 }

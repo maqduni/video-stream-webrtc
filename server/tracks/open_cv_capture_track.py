@@ -4,11 +4,11 @@ import time
 import cv2
 from aiortc import MediaStreamTrack
 
-from server.helpers.image_to_video_frame import image_to_video_frame
+from server.helpers.ndarray_to_video_frame import ndarray_to_video_frame
 from server.helpers.process_frame_with_openface import process_frame_with_openface
 
 
-class OpenCVCapture(MediaStreamTrack):
+class OpenCVCaptureTrack(MediaStreamTrack):
     """
     A video stream track that captures frames from OpenCV.
     """
@@ -35,9 +35,9 @@ class OpenCVCapture(MediaStreamTrack):
 
         frame = cv2.flip(frame, 1)
 
-        return image_to_video_frame(frame,
-                                    int(time.time() * 1000000),
-                                    fractions.Fraction(1, 1000000))
+        return ndarray_to_video_frame(frame,
+                                      int(time.time() * 1000000),
+                                      fractions.Fraction(1, 1000000))
 
     def __del__(self):
         self.cap.release()

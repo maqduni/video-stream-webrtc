@@ -1,7 +1,7 @@
 import cv2
 from aiortc import MediaStreamTrack
 
-from server.helpers.image_to_video_frame import image_to_video_frame
+from server.helpers.ndarray_to_video_frame import ndarray_to_video_frame
 
 
 class VideoTransformTrack(MediaStreamTrack):
@@ -43,14 +43,14 @@ class VideoTransformTrack(MediaStreamTrack):
             # combine color and edges
             img = cv2.bitwise_and(img_color, img_edges)
 
-            return image_to_video_frame(img, frame.pts, frame.time_base)
+            return ndarray_to_video_frame(img, frame.pts, frame.time_base)
 
         elif self.transform == "edges":
             # perform edge detection
             img = frame.to_ndarray(format="bgr24")
             img = cv2.cvtColor(cv2.Canny(img, 100, 200), cv2.COLOR_GRAY2BGR)
 
-            return image_to_video_frame(img, frame.pts, frame.time_base)
+            return ndarray_to_video_frame(img, frame.pts, frame.time_base)
 
         elif self.transform == "rotate":
             # rotate image
@@ -59,6 +59,6 @@ class VideoTransformTrack(MediaStreamTrack):
             M = cv2.getRotationMatrix2D((cols / 2, rows / 2), frame.time * 45, 1)
             img = cv2.warpAffine(img, M, (cols, rows))
 
-            return image_to_video_frame(img, frame.pts, frame.time_base)
+            return ndarray_to_video_frame(img, frame.pts, frame.time_base)
         else:
             return frame

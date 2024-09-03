@@ -12,9 +12,14 @@ OPEN_FACE_PROCESSED_FRAME_FILE = "frame_processed.jpg"
 TEMP_DIR = tempfile.mkdtemp()
 print('TEMP_DIR', TEMP_DIR)
 
+
 async def process_frame_with_openface(frame):
+    # Ensure the frame is a valid NumPy array with a supported data type
+    if not isinstance(frame, np.ndarray):
+        raise ValueError("Frame must be a NumPy array")
+
     # Ensure the frame is continuous
-    if not frame.flags['C_CONTIGUOUS']:
+    if not hasattr(frame, 'flags') or not frame.flags['C_CONTIGUOUS']:
         frame = np.ascontiguousarray(frame)
 
     frame_path = os.path.join(TEMP_DIR, OPEN_FACE_FRAME_FILE)

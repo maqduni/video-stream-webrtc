@@ -22,14 +22,21 @@
     <label for="use-stun">Use STUN server</label>
 </div>
 
-<button id="startStopButton">Start</button>
+<section>
+    <button id="start-stop-button">Start</button>
+</section>
 
-<div id="media" style="display: block"></div>
+<section>
+    <video id="source-video" controls autoplay></video>
+    <video id="processed-video" controls autoplay></video>
+</section>
 
-<audio id="audio" controls autoplay></audio>
-<div id="waveform" style="display: block">
-    <!--    <div id="mic" style="border: 1px solid #ddd; border-radius: 4px; margin-top: 1rem"></div>-->
-</div>
+<section>
+    <audio id="source-audio" controls autoplay></audio>
+    <div id="waveform" style="display: block"></div>
+
+    <div id="recordings"></div>
+</section>
 
 <script src="client.js"></script>
 </body>
