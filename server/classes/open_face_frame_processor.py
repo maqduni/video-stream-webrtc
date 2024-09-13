@@ -15,7 +15,6 @@ from aiortc import RTCPeerConnection, RTCDataChannel
 from server.helpers.get_log_info import get_log_info
 
 # Video recording parameters
-OPEN_FACE_BINARIES_PATH = "/Users/iskandarr/Documents/Projects/_Community/fea_tool/external_libs/openFace/OpenFace/build/bin"
 OPEN_FACE_FRAME_FILE = "frame.jpg"
 OPEN_FACE_PROCESSED_FRAME_FILE = "frame_processed.jpg"
 OPEN_FACE_EXTRACTED_FEATURES_FILE = 'frame_processed.csv'
@@ -66,7 +65,7 @@ class OpenFaceFrameProcessor:
 
         # Command to run OpenFace on the frame
         command = [
-            f"{OPEN_FACE_BINARIES_PATH}/FaceLandmarkImg",
+            f"{os.getenv('OPEN_FACE_BINARIES_PATH')}/FaceLandmarkImg",
             "-f", frame_path,
             "-out_dir", TEMP_DIR,
             "-of", OPEN_FACE_PROCESSED_FRAME_FILE,

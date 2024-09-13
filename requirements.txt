@@ -6,3 +6,4 @@ numpy
 pvrecorder
 pyaudio
 seaborn
+python-dotenv

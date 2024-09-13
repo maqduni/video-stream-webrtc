@@ -4,6 +4,7 @@ import uuid
 
 from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RTCDataChannel
+from dotenv import load_dotenv
 
 from server.helpers.get_log_info import get_log_info
 from server.tracks.open_cv_process_track import OpenCVProcessTrack
@@ -11,7 +12,6 @@ from server.tracks.open_cv_process_track import OpenCVProcessTrack
 pcs = set()
 
 ROOT = os.path.dirname(__file__)
-
 
 async def index(request):
     content = open(os.path.join(ROOT, "public/index.html"), "r").read()
@@ -121,6 +121,8 @@ async def close_peer_connections(app):
 
 
 if __name__ == "__main__":
+    load_dotenv()
+
     app = web.Application()
     app.on_shutdown.append(close_peer_connections)
 
