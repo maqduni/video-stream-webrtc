@@ -1,6 +1,7 @@
 import asyncio
 import os
 import uuid
+import ssl
 
 from aiohttp import web
 from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RTCDataChannel
@@ -119,6 +120,9 @@ async def close_peer_connections(app):
     await asyncio.gather(*coros)
     pcs.clear()
 
+# Create an SSL context
+ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+ssl_context.load_cert_chain('./server/server.crt', './server/server.key')
 
 if __name__ == "__main__":
     load_dotenv()
@@ -133,4 +137,4 @@ if __name__ == "__main__":
 
     app.router.add_static('/', path=os.path.join(ROOT, "public"), name='public')
 
-    web.run_app(app, access_log=None, host="0.0.0.0", port=8080, ssl_context=None)
+    web.run_app(app, access_log=None, port=443, ssl_context=ssl_context)
