@@ -1,4 +1,5 @@
 import fractions
+import os
 import time
 
 import cv2
@@ -9,10 +10,8 @@ from server.helpers.get_log_info import get_log_info
 from server.helpers.ndarray_to_video_frame import ndarray_to_video_frame
 from server.helpers.video_frame_to_ndarray import video_frame_to_ndarray
 
-SAMPLING_RATE = 15
 
-
-class OpenCVProcessTrack(MediaStreamTrack):
+class OpenFaceProcessTrack(MediaStreamTrack):
     """
     A video stream track that captures frames from OpenCV.
     """
@@ -50,7 +49,7 @@ class OpenCVProcessTrack(MediaStreamTrack):
         self.sampling_step += 1
         # print('sampling_step', self.sampling_step)
 
-        if self.sampling_step % SAMPLING_RATE == 0:
+        if self.sampling_step % int(os.getenv('OPEN_FACE_SAMPLING_RATE')) == 0:
             return True
 
         return False

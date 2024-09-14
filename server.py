@@ -8,7 +8,7 @@ from aiortc import RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RT
 from dotenv import load_dotenv
 
 from server.helpers.get_log_info import get_log_info
-from server.tracks.open_cv_process_track import OpenCVProcessTrack
+from server.tracks.open_face_process_track import OpenFaceProcessTrack
 
 pcs = set()
 
@@ -77,7 +77,7 @@ async def offer(request):
         log_info("Track %s received", track.kind)
 
         if track.kind == "video":
-            local_video = OpenCVProcessTrack(track, pc)
+            local_video = OpenFaceProcessTrack(track, pc)
             pc.addTrack(local_video)
 
         @track.on("ended")
