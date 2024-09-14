@@ -137,4 +137,4 @@ if __name__ == "__main__":
 
     app.router.add_static('/', path=os.path.join(ROOT, "public"), name='public')
 
-    web.run_app(app, access_log=None, port=443, ssl_context=ssl_context)
+    web.run_app(app, access_log=None, port=8443, ssl_context=ssl_context)
