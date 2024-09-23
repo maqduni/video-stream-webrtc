@@ -25,4 +25,4 @@ No need of conversion to try out the example. Added just in case.
         export OpenBLAS_HOME=$(brew --prefix openblas)
         export CMAKE_PREFIX_PATH=$OpenBLAS_HOME:$CMAKE_PREFIX_PATH
         ```
-    
+sudo apt-get install g++-8sudo apt-get install g++-8
