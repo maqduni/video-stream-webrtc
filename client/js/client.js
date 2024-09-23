@@ -1,6 +1,7 @@
-import WaveSurfer from 'wavesurfer.js'
-import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js'
-import onDocumentReady from "./helpers/onDocumentReady";
+import WaveSurfer from 'wavesurfer.js';
+import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js';
+
+import onDocumentReady from './helpers/onDocumentReady';
 
 onDocumentReady(() => {
     let pc = null;
@@ -105,7 +106,7 @@ onDocumentReady(() => {
                 try {
                     stream = await navigator.mediaDevices.getUserMedia({
                         video: true,
-                        audio: true
+                        audio: true,
                     });
                     // console.log(stream);
 
@@ -125,19 +126,19 @@ onDocumentReady(() => {
                     /*
                      * Data channel
                      */
-                    const dataChannel = pc.createDataChannel("graphs");
+                    const dataChannel = pc.createDataChannel('graphs');
                     dataChannel.onopen = () => {
-                        console.log("Data channel is open");
+                        console.log('Data channel is open');
                     };
                     dataChannel.onmessage = (event) => {
                         console.log(`Received message: ${event.data}`);
 
-                        const blob = new Blob([event.data])
+                        const blob = new Blob([event.data]);
                         $graphs.src = URL.createObjectURL(blob);
                         $graphs.style.display = 'block';
                     };
                     dataChannel.onclose = () => {
-                        console.log("Data channel is closed");
+                        console.log('Data channel is closed');
                     };
                 } catch (err) {
                     console.error('Error accessing media devices.', err);
@@ -202,12 +203,12 @@ onDocumentReady(() => {
                     body: JSON.stringify({
                         sdp: sessionDescription.sdp,
                         type: sessionDescription.type,
-                        video_transform: $videoTransform.value
+                        video_transform: $videoTransform.value,
                     }),
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    method: 'POST'
+                    method: 'POST',
                 });
 
                 const answer = await response.json();
@@ -221,22 +222,28 @@ onDocumentReady(() => {
         toggleStartStopButtonState() {
             isRecording = !isRecording;
             if (isRecording) {
-                $startStopButton.innerText = "Stop";
+                // $startStopButton.innerText = 'Stop';
+
+                $startStopButton.classList.remove('not-recording');
+                $startStopButton.classList.add('recording');
             } else {
-                $startStopButton.innerText = "Start";
+                // $startStopButton.innerText = 'Start';
+
+                $startStopButton.classList.remove('recording');
+                $startStopButton.classList.add('not-recording');
             }
         },
 
         async startWaveSurfer() {
             // Create an instance of WaveSurfer
             if (wavesurfer) {
-                wavesurfer.destroy()
+                wavesurfer.destroy();
             }
             wavesurfer = WaveSurfer.create({
                 container: '#waveform',
                 waveColor: 'rgb(200, 0, 200)',
                 progressColor: 'rgb(100, 0, 100)',
-            })
+            });
 
             // console.log('RecordPlugin.getAvailableAudioDevices()', RecordPlugin.getAvailableAudioDevices());
 
@@ -245,16 +252,16 @@ onDocumentReady(() => {
             // Initialize the Record plugin
             record = wavesurfer.registerPlugin(RecordPlugin.create({
                 scrollingWaveform: true,
-                renderRecordedAudio: false
-            }))
-            record.startRecording({deviceId}).then(() => {
-            })
+                renderRecordedAudio: false,
+            }));
+            record.startRecording({ deviceId }).then(() => {
+            });
 
             // Render recorded audio
             record.on('record-end', (blob) => {
             });
             record.on('record-progress', (time) => {
-            })
+            });
         },
         stopWaveSurfer() {
             if (record.isRecording() || record.isPaused()) {

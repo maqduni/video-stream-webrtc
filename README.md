@@ -15,5 +15,14 @@ Use the following to convert .mp4 to .ts:
 No need of conversion to try out the example. Added just in case.
 
 ## Troubleshooting
-1. On Ubuntu you might need to run `sudo apt-get install portaudio19-dev python3-dev` to install the required dependencies for pyaudio.
-2. 
+1. If you encounter `ERROR: Failed building wheel for pyaudio`
+    - On Ubuntu run `sudo apt-get install portaudio19-dev python3-dev` to install the required dependencies for pyaudio.
+    - On MacOS run `brew install portaudio`.
+2. If you encounter `CMake Error at cmake/modules/FindOpenBLAS.cmake:103 (MESSAGE): Could not find OpenBLAS`
+    - On MacOS run `brew install openblas`.
+    - On MacOS set environment variables
+        ```
+        export OpenBLAS_HOME=$(brew --prefix openblas)
+        export CMAKE_PREFIX_PATH=$OpenBLAS_HOME:$CMAKE_PREFIX_PATH
+        ```
+    
